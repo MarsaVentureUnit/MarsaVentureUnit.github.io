@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Update Score</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #eaeaea;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .container {
+      background-color: white;
+      padding: 30px 40px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      width: 400px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 25px;
+    }
+
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+
+    select, input[type="number"] {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+
+    button {
+      margin-top: 20px;
+      width: 100%;
+      padding: 10px;
+      border: none;
+      background-color: #007bff;
+      color: white;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Update Match Score</h1>
+
+    <label for="matchGroup">Group:</label>
+    <select id="matchGroup" onchange="fetchAndPopulateTeams()">
+      <option value="A">Group A</option>
+      <option value="B">Group B</option>
+      <option value="C">Group C</option>
+      <option value="D">Group D</option>
+      <option value="E">Group E</option>
+    </select>
+
+    <label for="homeTeam">Home Team:</label>
+    <select id="homeTeam"></select>
+
+    <label for="awayTeam">Away Team:</label>
+    <select id="awayTeam"></select>
+
+    <label for="homeScore">Home Score:</label>
+    <input type="number" id="homeScore" min="0" />
+
+    <label for="awayScore">Away Score:</label>
+    <input type="number" id="awayScore" min="0" />
+
+    <button onclick="updateScore()">Add Score</button>
+  </div>
+
+  <script>
+    const FIREBASE_DB_URL = 'https://sga165-test-default-rtdb.firebaseio.com/'; // Replace with your Firebase URL
+
+    window.onload = fetchAndPopulateTeams;
+
+    function fetchAndPopulateTeams() {
+      const groupId = document.getElementById('matchGroup').value;
+      const homeSelect = document.getElementById('homeTeam');
+      const awaySelect = document.getElementById('awayTeam');
+
+      fetch(`${FIREBASE_DB_URL}tournament/groups/${groupId}/teams.json`)
+        .then(response => response.json())
+        .then(teams => {
+          homeSelect.innerHTML = '';
+          awaySelect.innerHTML = '';
+
+          if (teams) {
+            Object.keys(teams).forEach(teamName => {
+              homeSelect.add(new Option(teamName, teamName));
+              awaySelect.add(new Option(teamName, teamName));
+            });
+          } else {
+            alert('No teams found for this group.');
+          }
+        })
+        .catch(error => {
+          console.error('Error fetching teams:', error);
+          alert('Failed to load teams.');
+        });
+    }
+
+    function updateScore() {
+      const groupId = document.getElementById('matchGroup').value;
+      const home = document.getElementById('homeTeam').value;
+      const away = document.getElementById('awayTeam').value;
+      const homeScore = parseInt(document.getElementById('homeScore').value);
+      const awayScore = parseInt(document.getElementById('awayScore').value);
+
+      if (!home || !away || isNaN(homeScore) || isNaN(awayScore) || home === away) {
+        alert('Please fill in all fields correctly, and choose different teams.');
+        return;
+      }
+
+      fetch(`${FIREBASE_DB_URL}tournament/groups/${groupId}.json`)
+        .then(response => response.json())
+        .then(group => {
+          if (!group.teams[home]) group.teams[home] = {};
+          if (!group.teams[away]) group.teams[away] = {};
+
+          const homeTeam = group.teams[home];
+          const awayTeam = group.teams[away];
+
+          homeTeam.matchesPlayed = (homeTeam.matchesPlayed || 0) + 1;
+          awayTeam.matchesPlayed = (awayTeam.matchesPlayed || 0) + 1;
+
+          homeTeam.goalsFor = (homeTeam.goalsFor || 0) + homeScore;
+          homeTeam.goalsAgainst = (homeTeam.goalsAgainst || 0) + awayScore;
+          awayTeam.goalsFor = (awayTeam.goalsFor || 0) + awayScore;
+          awayTeam.goalsAgainst = (awayTeam.goalsAgainst || 0) + homeScore;
+
+          if (homeScore > awayScore) {
+            homeTeam.points = (homeTeam.points || 0) + 3;
+          } else if (homeScore < awayScore) {
+            awayTeam.points = (awayTeam.points || 0) + 3;
+          } else {
+            homeTeam.points = (homeTeam.points || 0) + 1;
+            awayTeam.points = (awayTeam.points || 0) + 1;
+          }
+
+          group.matches = group.matches || [];
+          group.matches.push({ home, away, homeScore, awayScore });
+
+          return fetch(`${FIREBASE_DB_URL}tournament/groups/${groupId}.json`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(group)
+          });
+        })
+        .then(response => {
+          if (!response.ok) throw new Error('Failed to save score.');
+          alert('Score updated successfully!');
+          fetchAndPopulateTeams(); // Optionally reload the dropdowns
+        })
+        .catch(error => {
+          console.error('Error updating score:', error);
+          alert('Error updating data.');
+        });
+    }
+  </script>
+</body>
+</html>

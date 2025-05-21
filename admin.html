@@ -87,6 +87,10 @@
     <input type="number" id="awayScore" min="0" />
 
     <button onclick="updateScore()">Add Score</button>
+    <button type="button" class="btn btn-danger mt-2" onclick="window.location.href='/standings_admin.html'">
+      Go to Standings Admin
+    </button>
+
   </div>
 
   <script>
@@ -169,8 +173,9 @@
         })
         .then(response => {
           if (!response.ok) throw new Error('Failed to save score.');
-          alert('Score updated successfully!');
-          fetchAndPopulateTeams(); // Optionally reload the dropdowns
+          window.location.href = '/standings_admin.html';
+          // alert('Score updated successfully!');
+          // fetchAndPopulateTeams(); // Optionally reload the dropdowns
         })
         .catch(error => {
           console.error('Error updating score:', error);

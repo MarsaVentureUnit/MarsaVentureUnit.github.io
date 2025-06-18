@@ -14,7 +14,6 @@
       align-items: center;
       height: 100vh;
     }
-
     .container {
       background-color: white;
       padding: 30px 40px;
@@ -22,19 +21,16 @@
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
       width: 400px;
     }
-
     h1 {
       text-align: center;
       color: #333;
       margin-bottom: 25px;
     }
-
     label {
       display: block;
       margin-top: 15px;
       font-weight: bold;
     }
-
     select, input[type="number"] {
       width: 100%;
       padding: 8px;
@@ -43,7 +39,6 @@
       border: 1px solid #ccc;
       box-sizing: border-box;
     }
-
     button {
       margin-top: 20px;
       width: 100%;
@@ -55,7 +50,6 @@
       font-size: 16px;
       cursor: pointer;
     }
-
     button:hover {
       background-color: #0056b3;
     }
@@ -114,8 +108,8 @@
 
           if (teams) {
             Object.keys(teams).forEach(teamName => {
-              homeSelect.add(new Option(teamName, teamName));
-              awaySelect.add(new Option(teamName, teamName));
+              homeSelect.add(new Option(teams[teamName].name, teamName));
+              awaySelect.add(new Option(teams[teamName].name, teamName));
             });
           } else {
             alert('No teams found for this group.');
@@ -142,9 +136,6 @@
       fetch(`${FIREBASE_DB_URL}tournament/groups/${groupId}.json`)
         .then(response => response.json())
         .then(group => {
-          if (!group.teams[home]) group.teams[home] = {};
-          if (!group.teams[away]) group.teams[away] = {};
-
           const homeTeam = group.teams[home];
           const awayTeam = group.teams[away];
 
@@ -153,8 +144,11 @@
 
           homeTeam.goalsFor = (homeTeam.goalsFor || 0) + homeScore;
           homeTeam.goalsAgainst = (homeTeam.goalsAgainst || 0) + awayScore;
+          homeTeam.goalDifference = homeTeam.goalsFor - homeTeam.goalsAgainst;
+
           awayTeam.goalsFor = (awayTeam.goalsFor || 0) + awayScore;
           awayTeam.goalsAgainst = (awayTeam.goalsAgainst || 0) + homeScore;
+          awayTeam.goalDifference = awayTeam.goalsFor - awayTeam.goalsAgainst;
 
           if (homeScore > awayScore) {
             homeTeam.points = (homeTeam.points || 0) + 3;

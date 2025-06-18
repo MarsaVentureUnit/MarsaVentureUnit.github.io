@@ -53,17 +53,7 @@
   <script>
     const FIREBASE_DB_URL = 'https://sga165-test-default-rtdb.firebaseio.com/';
     let tournamentData = {
-      groups: {
-        A: { teams: {}, matches: [] },
-        B: { teams: {}, matches: [] },
-        C: { teams: {}, matches: [] },
-        D: { teams: {}, matches: [] },
-        E: { teams: {}, matches: [] },
-        F: { teams: {}, matches: [] },
-        G: { teams: {}, matches: [] },
-        H: { teams: {}, matches: [] },
-        I: { teams: {}, matches: [] }
-      }
+      groups: {}
     };
 
     document.addEventListener('DOMContentLoaded', function () {
@@ -93,12 +83,15 @@
         .then(data => {
           if (data) {
             tournamentData = data;
-            ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'].forEach(g => {
+            "ABCDEFGHI".split('').forEach(g => {
               if (!tournamentData.groups[g]) {
                 tournamentData.groups[g] = { teams: {}, matches: [] };
               }
             });
           } else {
+            "ABCDEFGHI".split('').forEach(g => {
+              tournamentData.groups[g] = { teams: {}, matches: [] };
+            });
             saveTournamentData();
           }
         })
@@ -114,9 +107,7 @@
         }
       })
         .then(response => {
-          if (!response.ok) {
-            throw new Error('Failed to save data');
-          }
+          if (!response.ok) throw new Error('Failed to save data');
           alert("Team added and data saved!");
         })
         .catch(error => console.error('Error saving data:', error));
@@ -139,7 +130,10 @@
         setsWon: 0,
         setsLost: 0,
         pointsScored: 0,
-        points: 0
+        points: 0,
+        goalsFor: 0,
+        goalsAgainst: 0,
+        goalDifference: 0
       };
 
       saveTournamentData();

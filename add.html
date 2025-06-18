@@ -34,6 +34,10 @@
               <option value="C">Group C</option>
               <option value="D">Group D</option>
               <option value="E">Group E</option>
+              <option value="F">Group F</option>
+              <option value="G">Group G</option>
+              <option value="H">Group H</option>
+              <option value="I">Group I</option>
             </select>
           </div>
           <div class="mb-3">
@@ -54,7 +58,11 @@
         B: { teams: {}, matches: [] },
         C: { teams: {}, matches: [] },
         D: { teams: {}, matches: [] },
-        E: { teams: {}, matches: [] }
+        E: { teams: {}, matches: [] },
+        F: { teams: {}, matches: [] },
+        G: { teams: {}, matches: [] },
+        H: { teams: {}, matches: [] },
+        I: { teams: {}, matches: [] }
       }
     };
 
@@ -85,7 +93,7 @@
         .then(data => {
           if (data) {
             tournamentData = data;
-            ['A', 'B', 'C', 'D', 'E'].forEach(g => {
+            ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'].forEach(g => {
               if (!tournamentData.groups[g]) {
                 tournamentData.groups[g] = { teams: {}, matches: [] };
               }

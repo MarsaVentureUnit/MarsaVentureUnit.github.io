@@ -72,6 +72,10 @@
       <option value="C">Group C</option>
       <option value="D">Group D</option>
       <option value="E">Group E</option>
+      <option value="F">Group F</option>
+      <option value="G">Group G</option>
+      <option value="H">Group H</option>
+      <option value="I">Group I</option>
     </select>
 
     <label for="homeTeam">Home Team:</label>
@@ -90,11 +94,10 @@
     <button type="button" class="btn btn-danger mt-2" onclick="window.location.href='/standings_admin.html'">
       Go to Standings Admin
     </button>
-
   </div>
 
   <script>
-    const FIREBASE_DB_URL = 'https://sga165-test-default-rtdb.firebaseio.com/'; // Replace with your Firebase URL
+    const FIREBASE_DB_URL = 'https://sga165-test-default-rtdb.firebaseio.com/';
 
     window.onload = fetchAndPopulateTeams;
 
@@ -174,8 +177,6 @@
         .then(response => {
           if (!response.ok) throw new Error('Failed to save score.');
           window.location.href = '/standings_admin.html';
-          // alert('Score updated successfully!');
-          // fetchAndPopulateTeams(); // Optionally reload the dropdowns
         })
         .catch(error => {
           console.error('Error updating score:', error);

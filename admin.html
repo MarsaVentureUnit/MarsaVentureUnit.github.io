@@ -122,61 +122,68 @@
     }
 
     function updateScore() {
-      const groupId = document.getElementById('matchGroup').value;
-      const home = document.getElementById('homeTeam').value;
-      const away = document.getElementById('awayTeam').value;
-      const homeScore = parseInt(document.getElementById('homeScore').value);
-      const awayScore = parseInt(document.getElementById('awayScore').value);
+  const groupId = document.getElementById('matchGroup').value;
+  const home = document.getElementById('homeTeam').value;
+  const away = document.getElementById('awayTeam').value;
+  const homeScore = parseInt(document.getElementById('homeScore').value);
+  const awayScore = parseInt(document.getElementById('awayScore').value);
 
-      if (!home || !away || isNaN(homeScore) || isNaN(awayScore) || home === away) {
-        alert('Please fill in all fields correctly, and choose different teams.');
-        return;
+  if (!home || !away || isNaN(homeScore) || isNaN(awayScore) || home === away) {
+    alert('Please fill in all fields correctly, and choose different teams.');
+    return;
+  }
+
+  fetch(`${FIREBASE_DB_URL}tournament/groups/${groupId}.json`)
+    .then(response => response.json())
+    .then(group => {
+      const homeTeam = group.teams[home];
+      const awayTeam = group.teams[away];
+
+      homeTeam.matchesPlayed = (homeTeam.matchesPlayed || 0) + 1;
+      awayTeam.matchesPlayed = (awayTeam.matchesPlayed || 0) + 1;
+
+      homeTeam.goalsFor = (homeTeam.goalsFor || 0) + homeScore;
+      homeTeam.goalsAgainst = (homeTeam.goalsAgainst || 0) + awayScore;
+
+      awayTeam.goalsFor = (awayTeam.goalsFor || 0) + awayScore;
+      awayTeam.goalsAgainst = (awayTeam.goalsAgainst || 0) + homeScore;
+
+      // Use goal ratio instead of goal difference
+      homeTeam.goalDifference = homeTeam.goalsAgainst === 0
+        ? homeTeam.goalsFor
+        : homeTeam.goalsFor / homeTeam.goalsAgainst;
+
+      awayTeam.goalDifference = awayTeam.goalsAgainst === 0
+        ? awayTeam.goalsFor
+        : awayTeam.goalsFor / awayTeam.goalsAgainst;
+
+      if (homeScore > awayScore) {
+        homeTeam.points = (homeTeam.points || 0) + 3;
+      } else if (homeScore < awayScore) {
+        awayTeam.points = (awayTeam.points || 0) + 3;
+      } else {
+        homeTeam.points = (homeTeam.points || 0) + 1;
+        awayTeam.points = (awayTeam.points || 0) + 1;
       }
 
-      fetch(`${FIREBASE_DB_URL}tournament/groups/${groupId}.json`)
-        .then(response => response.json())
-        .then(group => {
-          const homeTeam = group.teams[home];
-          const awayTeam = group.teams[away];
+      group.matches = group.matches || [];
+      group.matches.push({ home, away, homeScore, awayScore });
 
-          homeTeam.matchesPlayed = (homeTeam.matchesPlayed || 0) + 1;
-          awayTeam.matchesPlayed = (awayTeam.matchesPlayed || 0) + 1;
-
-          homeTeam.goalsFor = (homeTeam.goalsFor || 0) + homeScore;
-          homeTeam.goalsAgainst = (homeTeam.goalsAgainst || 0) + awayScore;
-          homeTeam.goalDifference = homeTeam.goalsFor - homeTeam.goalsAgainst;
-
-          awayTeam.goalsFor = (awayTeam.goalsFor || 0) + awayScore;
-          awayTeam.goalsAgainst = (awayTeam.goalsAgainst || 0) + homeScore;
-          awayTeam.goalDifference = awayTeam.goalsFor - awayTeam.goalsAgainst;
-
-          if (homeScore > awayScore) {
-            homeTeam.points = (homeTeam.points || 0) + 3;
-          } else if (homeScore < awayScore) {
-            awayTeam.points = (awayTeam.points || 0) + 3;
-          } else {
-            homeTeam.points = (homeTeam.points || 0) + 1;
-            awayTeam.points = (awayTeam.points || 0) + 1;
-          }
-
-          group.matches = group.matches || [];
-          group.matches.push({ home, away, homeScore, awayScore });
-
-          return fetch(`${FIREBASE_DB_URL}tournament/groups/${groupId}.json`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(group)
-          });
-        })
-        .then(response => {
-          if (!response.ok) throw new Error('Failed to save score.');
-          window.location.href = '/standings_admin.html';
-        })
-        .catch(error => {
-          console.error('Error updating score:', error);
-          alert('Error updating data.');
-        });
-    }
+      return fetch(`${FIREBASE_DB_URL}tournament/groups/${groupId}.json`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(group)
+      });
+    })
+    .then(response => {
+      if (!response.ok) throw new Error('Failed to save score.');
+      window.location.href = '/standings_admin.html';
+    })
+    .catch(error => {
+      console.error('Error updating score:', error);
+      alert('Error updating data.');
+    });
+}
   </script>
 </body>
 </html>

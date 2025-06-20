@@ -25,12 +25,16 @@
       <input type="text" name="final2" placeholder="Finalist 2" class="form-control mb-4"/>
     </div>
 
+    <h4>Placement Matches</h4>
+    <div id="placements" class="mb-4"></div>
+
     <button class="btn btn-primary" type="submit">Save</button>
   </form>
 
   <script>
     const FIREBASE_DB_URL = 'https://sga165-test-default-rtdb.firebaseio.com/';
     const quartersDiv = document.getElementById('quarters');
+    const placementsDiv = document.getElementById('placements');
 
     const createInputPair = (label, name1, name2, val1 = '', val2 = '') => {
       return `
@@ -42,20 +46,28 @@
     };
 
     function renderInputs(data) {
+      // Quarters
       quartersDiv.innerHTML = '';
       for (let i = 0; i < 3; i++) {
         const [a, b] = data.quarter?.[i] || ['', ''];
         quartersDiv.innerHTML += createInputPair(`Quarter ${i + 1}`, `q${i}a`, `q${i}b`, a, b);
       }
 
-      // Fill semi-finalist inputs
+      // Semis
       document.querySelector('[name=semi1]').value = data.semi?.[0]?.[0] || '';
       document.querySelector('[name=semi2]').value = data.semi?.[0]?.[1] || '';
       document.querySelector('[name=semi3]').value = data.semi?.[1]?.[0] || '';
 
-      // Fill final inputs
+      // Finals
       document.querySelector('[name=final1]').value = data.final?.[0] || '';
       document.querySelector('[name=final2]').value = data.final?.[1] || '';
+
+      // Placement Matches
+      placementsDiv.innerHTML = '';
+      for (let i = 0; i < 6; i++) {
+        const [a, b] = data.placement?.[i] || ['', ''];
+        placementsDiv.innerHTML += createInputPair(`Match ${i + 1}`, `p${i}a`, `p${i}b`, a, b);
+      }
     }
 
     async function loadData() {
@@ -67,6 +79,7 @@
     document.getElementById('bracketForm').addEventListener('submit', async (e) => {
       e.preventDefault();
 
+      // Quarters
       const q = [];
       for (let i = 0; i < 3; i++) {
         q.push([
@@ -75,6 +88,7 @@
         ]);
       }
 
+      // Semis
       const s = [[
         document.querySelector('[name=semi1]').value,
         document.querySelector('[name=semi2]').value
@@ -82,15 +96,25 @@
         document.querySelector('[name=semi3]').value
       ]];
 
+      // Finals
       const f = [
         document.querySelector('[name=final1]').value,
         document.querySelector('[name=final2]').value
       ];
 
+      // Placement Matches
+      const p = [];
+      for (let i = 0; i < 6; i++) {
+        p.push([
+          document.querySelector(`[name=p${i}a]`).value,
+          document.querySelector(`[name=p${i}b]`).value
+        ]);
+      }
+
       await fetch(`${FIREBASE_DB_URL}bracket.json`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ quarter: q, semi: s, final: f })
+        body: JSON.stringify({ quarter: q, semi: s, final: f, placement: p })
       });
 
       alert('Bracket saved!');

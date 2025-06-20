@@ -44,7 +44,7 @@
       border-radius: 8px;
       padding: 20px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      min-width: 360px; /* Reduced width */
+      min-width: 360px;
       font-weight: bold;
     }
     .semi-combined span {
@@ -55,6 +55,13 @@
       font-weight: bold;
       margin-bottom: 8px;
       text-align: center;
+    }
+    hr {
+      border: 0;
+      height: 2px;
+      background: #ccc;
+      width: 80%;
+      margin: 40px auto 20px auto;
     }
   </style>
 </head>
@@ -109,20 +116,39 @@
       const data = await fetchBracket();
       const html = [];
 
+      // Final Match
       if (data.final) {
         html.push(`<div class="round">${createMatch('Final', data.final[0], data.final[1])}</div>`);
       }
 
+      // Semi-Finals
       if (data.semi) {
         html.push(`<div class="round">${createCombinedSemiBox(data.semi)}</div>`);
       } else {
-        // Show empty semi box if no data
         html.push(`<div class="round">${createCombinedSemiBox([[], []])}</div>`);
       }
 
+      // Quarter-Finals
       if (data.quarter) {
-        const quarterHTML = data.quarter.map((match, i) => createMatch(`Quarter ${i + 1}`, match[0], match[1])).join('');
+        const quarterHTML = data.quarter.map((match, i) =>
+          createMatch(`Quarter ${i + 1}`, match[0], match[1])
+        ).join('');
         html.push(`<div class="round">${quarterHTML}</div>`);
+      }
+
+      // Placement Matches Section
+      html.push(`<hr/><h4 class="text-center">Placement Matches</h4>`);
+
+      if (data.placement) {
+        const placementHTML = data.placement.map((match, i) =>
+          createMatch(`Match ${i + 1}`, match[0], match[1])
+        ).join('');
+        html.push(`<div class="round">${placementHTML}</div>`);
+      } else {
+        const emptyPlacement = Array.from({ length: 6 }, (_, i) =>
+          createMatch(`Match ${i + 1}`, '—', '—')
+        ).join('');
+        html.push(`<div class="round">${emptyPlacement}</div>`);
       }
 
       bracketContainer.innerHTML = html.join('');

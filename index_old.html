@@ -58,7 +58,7 @@
 
     function sortTeams(teams) {
       return teams.sort((a, b) => {
-        if (b.points !== a.points) return b.points - a.points;
+        if ((b.wins || 0) !== (a.wins || 0)) return (b.wins || 0) - (a.wins || 0);
         return (b.goalDifference || 0) - (a.goalDifference || 0);
       });
     }
@@ -83,7 +83,7 @@
                       <th>Team</th>
                       <th>P</th>
                       <th>GD</th>
-                      <th>Pts</th>
+                      <th>Wins</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -92,7 +92,7 @@
                         <td>${team.name}</td>
                         <td>${team.matchesPlayed || 0}</td>
                         <td>${team.goalDifference || 0}</td>
-                        <td>${team.points || 0}</td>
+                        <td>${team.wins || 0}</td>
                       </tr>
                     `).join('')}
                   </tbody>

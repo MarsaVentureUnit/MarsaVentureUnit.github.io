@@ -94,8 +94,8 @@
                     <tr>
                       <th>Team</th>
                       <th>P</th>
-                      <th>GD</th>
                       <th>Wins</th>
+                      <th>Ratio</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -103,8 +103,8 @@
                       <tr>
                         <td>${team.name}</td>
                         <td>${team.matchesPlayed || 0}</td>
-                        <td>${team.goalDifference || 0}</td>
                         <td>${team.wins || 0}</td>
+                        <td>${team.goalDifference || 0}</td>
                       </tr>
                     `).join('')}
                   </tbody>

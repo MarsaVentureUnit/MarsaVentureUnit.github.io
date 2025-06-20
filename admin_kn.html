@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Edit Bracket</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+</head>
+<body class="p-4">
+  <h2>Edit Bracket</h2>
+  <form id="bracketForm">
+    <h4>Quarter Finals</h4>
+    <div id="quarters"></div>
+
+    <h4>Semi Finalists</h4>
+    <div id="semis" class="mb-4">
+      <input type="text" name="semi1" placeholder="Semi-Finalist 1" class="form-control mb-2"/>
+      <input type="text" name="semi2" placeholder="Semi-Finalist 2" class="form-control mb-2"/>
+      <input type="text" name="semi3" placeholder="Semi-Finalist 3" class="form-control mb-2"/>
+    </div>
+
+    <h4>Final</h4>
+    <div id="finals" class="mb-4">
+      <input type="text" name="final1" placeholder="Finalist 1" class="form-control mb-2"/>
+      <input type="text" name="final2" placeholder="Finalist 2" class="form-control mb-4"/>
+    </div>
+
+    <button class="btn btn-primary" type="submit">Save</button>
+  </form>
+
+  <script>
+    const FIREBASE_DB_URL = 'https://sga165-test-default-rtdb.firebaseio.com/';
+    const quartersDiv = document.getElementById('quarters');
+
+    const createInputPair = (label, name1, name2, val1 = '', val2 = '') => {
+      return `
+        <div class="mb-3">
+          <label class="form-label">${label}</label>
+          <input type="text" name="${name1}" class="form-control mb-1" value="${val1}"/>
+          <input type="text" name="${name2}" class="form-control" value="${val2}"/>
+        </div>`;
+    };
+
+    function renderInputs(data) {
+      quartersDiv.innerHTML = '';
+      for (let i = 0; i < 3; i++) {
+        const [a, b] = data.quarter?.[i] || ['', ''];
+        quartersDiv.innerHTML += createInputPair(`Quarter ${i + 1}`, `q${i}a`, `q${i}b`, a, b);
+      }
+
+      // Fill semi-finalist inputs
+      document.querySelector('[name=semi1]').value = data.semi?.[0]?.[0] || '';
+      document.querySelector('[name=semi2]').value = data.semi?.[0]?.[1] || '';
+      document.querySelector('[name=semi3]').value = data.semi?.[1]?.[0] || '';
+
+      // Fill final inputs
+      document.querySelector('[name=final1]').value = data.final?.[0] || '';
+      document.querySelector('[name=final2]').value = data.final?.[1] || '';
+    }
+
+    async function loadData() {
+      const res = await fetch(`${FIREBASE_DB_URL}bracket.json`);
+      const data = await res.json();
+      renderInputs(data || {});
+    }
+
+    document.getElementById('bracketForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const q = [];
+      for (let i = 0; i < 3; i++) {
+        q.push([
+          document.querySelector(`[name=q${i}a]`).value,
+          document.querySelector(`[name=q${i}b]`).value
+        ]);
+      }
+
+      const s = [[
+        document.querySelector('[name=semi1]').value,
+        document.querySelector('[name=semi2]').value
+      ], [
+        document.querySelector('[name=semi3]').value
+      ]];
+
+      const f = [
+        document.querySelector('[name=final1]').value,
+        document.querySelector('[name=final2]').value
+      ];
+
+      await fetch(`${FIREBASE_DB_URL}bracket.json`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ quarter: q, semi: s, final: f })
+      });
+
+      alert('Bracket saved!');
+    });
+
+    loadData();
+  </script>
+</body>
+</html>

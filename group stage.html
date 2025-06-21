@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Volleyball Tournament Standings</title>
+  
+  <!-- Google Font for a modern bold look -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(to bottom, #003f7d, #0077b6);
+      color: #ffffff;
+      margin: 0;
+      padding: 0;
+    }
+
+    .header {
+      background-color: transparent;
+      text-align: center;
+      padding: 40px 20px 20px;
+    }
+
+    .header h1 {
+      font-size: 2.8rem;
+      font-weight: 800;
+      color: #fdc229;
+      margin-bottom: 10px;
+    }
+
+    .header p {
+      font-size: 1.3rem;
+      color: #ffffff;
+      opacity: 0.9;
+    }
+
+    .group-container {
+      background: #f4a261;
+      color: #003049;
+      border-radius: 16px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+      margin-bottom: 30px;
+      overflow: hidden;
+      transition: transform 0.2s;
+    }
+
+    .group-container:hover {
+      transform: translateY(-5px);
+    }
+
+    .group-header {
+      background-color: #fdc229;
+      color: #003049;
+      padding: 12px 18px;
+      font-weight: 600;
+      font-size: 1.2rem;
+    }
+
+    .table {
+      margin: 0;
+    }
+
+    .table thead {
+      background-color: #e9c46a;
+    }
+
+    .table th, .table td {
+      color: #000;
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    .table-striped tbody tr:nth-of-type(odd) {
+      background-color: rgba(255, 255, 255, 0.6);
+    }
+
+    .table-striped tbody tr:nth-of-type(even) {
+      background-color: rgba(255, 255, 255, 0.9);
+    }
+
+    .container {
+      margin-bottom: 60px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Volleyball Tournament</h1>
+    <p>Group Stage Classification</p>
+  </div>
+
+  <div class="container">
+    <div class="row" id="groupsContainer">
+      <!-- Groups will be loaded here -->
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const FIREBASE_DB_URL = 'https://sga165-test-default-rtdb.firebaseio.com/';
+    const groupsContainer = document.getElementById('groupsContainer');
+
+    async function loadTournamentData() {
+      const response = await fetch(`${FIREBASE_DB_URL}tournament.json`);
+      return await response.json();
+    }
+
+    function sortTeams(teams) {
+      return teams.sort((a, b) => {
+        if ((b.wins || 0) !== (a.wins || 0)) return (b.wins || 0) - (a.wins || 0);
+        return (b.goalDifference || 0) - (a.goalDifference || 0);
+      });
+    }
+
+    async function renderStandings() {
+      const tournamentData = await loadTournamentData();
+      groupsContainer.innerHTML = '';
+
+      for (const groupId in tournamentData.groups) {
+        const group = tournamentData.groups[groupId];
+        const teams = Object.values(group.teams || {});
+        const sortedTeams = sortTeams(teams);
+
+        const groupHtml = `
+          <div class="col-md-6 col-lg-4">
+            <div class="group-container">
+              <div class="group-header">Group ${groupId}</div>
+              <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                  <thead>
+                    <tr>
+                      <th>Team</th>
+                      <th>P</th>
+                      <th>Wins</th>
+                      <th>Ratio</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${sortedTeams.map(team => `
+                      <tr>
+                        <td>${team.name}</td>
+                        <td>${team.matchesPlayed || 0}</td>
+                        <td>${team.wins || 0}</td>
+                        <td>${team.goalDifference || 0}</td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        `;
+
+        groupsContainer.innerHTML += groupHtml;
+      }
+    }
+
+    renderStandings();
+    setInterval(renderStandings, 30000);
+  </script>
+</body>
+</html>

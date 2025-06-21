@@ -3,10 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Volleyball Tournament Standings</title>
-  
-  <!-- Google Font for a modern bold look -->
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+  <title>Tournament Bracket</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;700;900&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
 
   <style>
@@ -19,14 +17,13 @@
     }
 
     .header {
-      background-color: transparent;
       text-align: center;
       padding: 40px 20px 20px;
     }
 
     .header h1 {
       font-size: 2.8rem;
-      font-weight: 800;
+      font-weight: 900;
       color: #fdc229;
       margin-bottom: 10px;
     }
@@ -37,129 +34,101 @@
       opacity: 0.9;
     }
 
-    .group-container {
-      background: #f4a261;
-      color: #003049;
+    .tree-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 40px;
+    }
+
+    .round {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 25px;
+      justify-content: center;
+    }
+
+    .match {
+      background: #fdc229;
       border-radius: 16px;
+      padding: 20px;
       box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-      margin-bottom: 30px;
-      overflow: hidden;
+      text-align: center;
+      min-width: 160px;
+      color: #003049;
+      font-weight: 600;
       transition: transform 0.2s;
     }
 
-    .group-container:hover {
-      transform: translateY(-5px);
+    .match:hover {
+      transform: translateY(-4px);
     }
 
-    .group-header {
-      background-color: #fdc229;
-      color: #003049;
-      padding: 12px 18px;
-      font-weight: 600;
-      font-size: 1.2rem;
-    }
-
-    .table {
-      margin: 0;
-    }
-
-    .table thead {
-      background-color: #e9c46a;
-    }
-
-    .table th, .table td {
-      color: #000;
-      text-align: center;
-      vertical-align: middle;
-    }
-
-    .table-striped tbody tr:nth-of-type(odd) {
-      background-color: rgba(255, 255, 255, 0.6);
-    }
-
-    .table-striped tbody tr:nth-of-type(even) {
-      background-color: rgba(255, 255, 255, 0.9);
-    }
-
-    .container {
-      margin-bottom: 60px;
+    .round-label {
+      font-weight: 700;
+      font-size: 1.1rem;
+      margin-bottom: 10px;
     }
   </style>
 </head>
 <body>
   <div class="header">
     <h1>Volleyball Tournament</h1>
-    <p>Group Stage Classification</p>
+    <p>Knockout Bracket</p>
   </div>
 
   <div class="container">
-    <div class="row" id="groupsContainer">
-      <!-- Groups will be loaded here -->
-    </div>
+    <div class="tree-container" id="bracket"></div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     const FIREBASE_DB_URL = 'https://sga165-test-default-rtdb.firebaseio.com/';
-    const groupsContainer = document.getElementById('groupsContainer');
+    const bracketContainer = document.getElementById('bracket');
 
-    async function loadTournamentData() {
-      const response = await fetch(`${FIREBASE_DB_URL}tournament.json`);
-      return await response.json();
+    async function fetchBracket() {
+      const res = await fetch(`${FIREBASE_DB_URL}bracket.json`);
+      return await res.json();
     }
 
-    function sortTeams(teams) {
-      return teams.sort((a, b) => {
-        if ((b.wins || 0) !== (a.wins || 0)) return (b.wins || 0) - (a.wins || 0);
-        return (b.goalDifference || 0) - (a.goalDifference || 0);
-      });
+    function createMatch(roundLabel, team1, team2) {
+      return `
+        <div class="match">
+          <div class="round-label">${roundLabel}</div>
+          <div>${team1 || '—'}</div>
+          <div>${team2 || '—'}</div>
+        </div>
+      `;
     }
 
-    async function renderStandings() {
-      const tournamentData = await loadTournamentData();
-      groupsContainer.innerHTML = '';
+    async function renderBracket() {
+      const data = await fetchBracket();
+      const html = [];
 
-      for (const groupId in tournamentData.groups) {
-        const group = tournamentData.groups[groupId];
-        const teams = Object.values(group.teams || {});
-        const sortedTeams = sortTeams(teams);
-
-        const groupHtml = `
-          <div class="col-md-6 col-lg-4">
-            <div class="group-container">
-              <div class="group-header">Group ${groupId}</div>
-              <div class="table-responsive">
-                <table class="table table-striped table-hover">
-                  <thead>
-                    <tr>
-                      <th>Team</th>
-                      <th>P</th>
-                      <th>Wins</th>
-                      <th>Ratio</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    ${sortedTeams.map(team => `
-                      <tr>
-                        <td>${team.name}</td>
-                        <td>${team.matchesPlayed || 0}</td>
-                        <td>${team.wins || 0}</td>
-                        <td>${team.goalDifference || 0}</td>
-                      </tr>
-                    `).join('')}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        `;
-
-        groupsContainer.innerHTML += groupHtml;
+      // Final
+      if (data.final) {
+        html.push(`<div class="round">${createMatch('Final', data.final[0], data.final[1])}</div>`);
+      } else {
+        html.push(`<div class="round">${createMatch('Final', '—', '—')}</div>`);
       }
+
+      // Semi-Finals
+      if (data.semi) {
+        const semiHTML = data.semi.map((match, i) =>
+          createMatch(`Semi ${i + 1}`, match[0], match[1])
+        ).join('');
+        html.push(`<div class="round">${semiHTML}</div>`);
+      } else {
+        const emptySemis = Array.from({ length: 2 }, (_, i) =>
+          createMatch(`Semi ${i + 1}`, '—', '—')
+        ).join('');
+        html.push(`<div class="round">${emptySemis}</div>`);
+      }
+
+      bracketContainer.innerHTML = html.join('');
     }
 
-    renderStandings();
-    setInterval(renderStandings, 30000);
+    renderBracket();
+    setInterval(renderBracket, 30000);
   </script>
 </body>
 </html>

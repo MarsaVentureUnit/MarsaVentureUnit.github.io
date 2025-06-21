@@ -1,90 +1,165 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Coming Soon</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Volleyball Tournament Standings</title>
+  
+  <!-- Google Font for a modern bold look -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(to bottom, #003f7d, #0077b6);
+      color: #ffffff;
+      margin: 0;
+      padding: 0;
+    }
 
-        body, html {
-            height: 100%;
-            font-family: 'Montserrat', sans-serif;
-        }
+    .header {
+      background-color: transparent;
+      text-align: center;
+      padding: 40px 20px 20px;
+    }
 
-        .container {
-            position: relative;
-            height: 100%;
-            background: url('https://media.istockphoto.com/id/590078084/photo/beach-volleyball-in-nice-france.jpg?s=612x612&w=0&k=20&c=LnVGRhP9PIO3epQfcClwpHAwISLkquXknjY3MjLa0l8=') no-repeat center center/cover;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            color: white;
-            background-blend-mode: overlay;
-            background-color: rgba(0, 0, 0, 0.5);
-        }
+    .header h1 {
+      font-size: 2.8rem;
+      font-weight: 800;
+      color: #fdc229;
+      margin-bottom: 10px;
+    }
 
-        h1 {
-            font-size: 4rem;
-            font-weight: 700;
-            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.7);
-            margin-bottom: 20px;
-        }
+    .header p {
+      font-size: 1.3rem;
+      color: #ffffff;
+      opacity: 0.9;
+    }
 
-        .countdown {
-            font-size: 1.5rem;
-            font-weight: 400;
-            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7);
-        }
+    .group-container {
+      background: #f4a261;
+      color: #003049;
+      border-radius: 16px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+      margin-bottom: 30px;
+      overflow: hidden;
+      transition: transform 0.2s;
+    }
 
-        @media (max-width: 600px) {
-            h1 {
-                font-size: 2.5rem;
-            }
-            .countdown {
-                font-size: 1.2rem;
-            }
-        }
-    </style>
+    .group-container:hover {
+      transform: translateY(-5px);
+    }
+
+    .group-header {
+      background-color: #fdc229;
+      color: #003049;
+      padding: 12px 18px;
+      font-weight: 600;
+      font-size: 1.2rem;
+    }
+
+    .table {
+      margin: 0;
+    }
+
+    .table thead {
+      background-color: #e9c46a;
+    }
+
+    .table th, .table td {
+      color: #000;
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    .table-striped tbody tr:nth-of-type(odd) {
+      background-color: rgba(255, 255, 255, 0.6);
+    }
+
+    .table-striped tbody tr:nth-of-type(even) {
+      background-color: rgba(255, 255, 255, 0.9);
+    }
+
+    .container {
+      margin-bottom: 60px;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Coming Soon</h1>
-        <div class="countdown" id="countdown"></div>
+  <div class="header">
+    <h1>Volleyball Tournament</h1>
+    <p>Group Stage Classification</p>
+  </div>
+
+  <div class="container">
+    <div class="row" id="groupsContainer">
+      <!-- Groups will be loaded here -->
     </div>
+  </div>
 
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            function updateCountdown() {
-                const countdownElement = document.getElementById('countdown');
-                const launchDate = new Date('June 21, 2025 15:00:00').getTime();
-                const now = new Date().getTime();
-                const distance = launchDate - now;
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const FIREBASE_DB_URL = 'https://sga165-test-default-rtdb.firebaseio.com/';
+    const groupsContainer = document.getElementById('groupsContainer');
 
-                const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-                const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+    async function loadTournamentData() {
+      const response = await fetch(`${FIREBASE_DB_URL}tournament.json`);
+      return await response.json();
+    }
 
-                countdownElement.innerHTML = days + ' Days ' + hours + ' Hours ' + minutes + ' Minutes ' + seconds + ' Seconds';
+    function sortTeams(teams) {
+      return teams.sort((a, b) => {
+        if ((b.wins || 0) !== (a.wins || 0)) return (b.wins || 0) - (a.wins || 0);
+        return (b.goalDifference || 0) - (a.goalDifference || 0);
+      });
+    }
 
-                if (distance < 0) {
-                    clearInterval(interval);
-                    countdownElement.innerHTML = 'Launched!';
-                }
-            }
+    async function renderStandings() {
+      const tournamentData = await loadTournamentData();
+      groupsContainer.innerHTML = '';
 
-            const interval = setInterval(updateCountdown, 1000);
-            updateCountdown();
-        });
-    </script>
+      for (const groupId in tournamentData.groups) {
+        const group = tournamentData.groups[groupId];
+        const teams = Object.values(group.teams || {});
+        const sortedTeams = sortTeams(teams);
+
+        const groupHtml = `
+          <div class="col-md-6 col-lg-4">
+            <div class="group-container">
+              <div class="group-header">Group ${groupId}</div>
+              <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                  <thead>
+                    <tr>
+                      <th>Team</th>
+                      <th>P</th>
+                      <th>Wins</th>
+                      <th>Ratio</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${sortedTeams.map(team => `
+                      <tr>
+                        <td>${team.name}</td>
+                        <td>${team.matchesPlayed || 0}</td>
+                        <td>${team.wins || 0}</td>
+                        <td>${team.goalDifference || 0}</td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        `;
+
+        groupsContainer.innerHTML += groupHtml;
+      }
+    }
+
+    renderStandings();
+    setInterval(renderStandings, 30000);
+  </script>
 </body>
 </html>

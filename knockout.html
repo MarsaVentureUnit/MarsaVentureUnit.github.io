@@ -4,8 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Tournament Bracket</title>
-
-  <!-- Google Font for bold styling -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;700;900&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
 
@@ -66,40 +64,9 @@
       transform: translateY(-4px);
     }
 
-    .semi-combined {
-      display: flex;
-      justify-content: space-around;
-      align-items: center;
-      background: #fdc229;
-      border-radius: 16px;
-      padding: 20px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-      min-width: 360px;
-      font-weight: 600;
-      color: #003049;
-    }
-
-    .semi-combined span {
-      flex: 1;
-      text-align: center;
-    }
-
     .round-label {
       font-weight: 700;
       font-size: 1.1rem;
-      margin-bottom: 10px;
-    }
-
-    hr {
-      border: 0;
-      height: 3px;
-      background: #e9c46a;
-      width: 80%;
-      margin: 50px auto 20px auto;
-    }
-
-    h4 {
-      color: #f4f4f4;
       margin-bottom: 10px;
     }
   </style>
@@ -133,61 +100,28 @@
       `;
     }
 
-    function createCombinedSemiBox(teams) {
-      const flatTeams = teams.flat();
-      const paddedTeams = [];
-
-      for (let i = 0; i < 3; i++) {
-        paddedTeams.push(flatTeams[i] || '—');
-      }
-
-      return `
-        <div class="match">
-          <div class="round-label">Semi-Finalists</div>
-          <div class="semi-combined">
-            ${paddedTeams.map(name => `<span>${name}</span>`).join('')}
-          </div>
-        </div>
-      `;
-    }
-
     async function renderBracket() {
       const data = await fetchBracket();
       const html = [];
 
-      // Final Match
+      // Final
       if (data.final) {
         html.push(`<div class="round">${createMatch('Final', data.final[0], data.final[1])}</div>`);
+      } else {
+        html.push(`<div class="round">${createMatch('Final', '—', '—')}</div>`);
       }
 
       // Semi-Finals
       if (data.semi) {
-        html.push(`<div class="round">${createCombinedSemiBox(data.semi)}</div>`);
+        const semiHTML = data.semi.map((match, i) =>
+          createMatch(`Semi ${i + 1}`, match[0], match[1])
+        ).join('');
+        html.push(`<div class="round">${semiHTML}</div>`);
       } else {
-        html.push(`<div class="round">${createCombinedSemiBox([[], []])}</div>`);
-      }
-
-      // Quarter-Finals
-      if (data.quarter) {
-        const quarterHTML = data.quarter.map((match, i) =>
-          createMatch(`Quarter ${i + 1}`, match[0], match[1])
+        const emptySemis = Array.from({ length: 2 }, (_, i) =>
+          createMatch(`Semi ${i + 1}`, '—', '—')
         ).join('');
-        html.push(`<div class="round">${quarterHTML}</div>`);
-      }
-
-      // Placement Matches Section
-      html.push(`<hr/><h4 class="text-center">Placement Matches</h4>`);
-
-      if (data.placement) {
-        const placementHTML = data.placement.map((match, i) =>
-          createMatch(`Match ${i + 1}`, match[0], match[1])
-        ).join('');
-        html.push(`<div class="round">${placementHTML}</div>`);
-      } else {
-        const emptyPlacement = Array.from({ length: 6 }, (_, i) =>
-          createMatch(`Match ${i + 1}`, '—', '—')
-        ).join('');
-        html.push(`<div class="round">${emptyPlacement}</div>`);
+        html.push(`<div class="round">${emptySemis}</div>`);
       }
 
       bracketContainer.innerHTML = html.join('');
